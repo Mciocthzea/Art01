@@ -147,7 +147,7 @@ canvas01.onclick = function(e) {
     askPermission();
 };
 
-canvas01.ontouchstart = function(e) {
+canvas01.ontouchend = function(e) {
     const log_console = document.getElementById("log-console");
     log_console.innerText +=" clicked "
     //e.preventDefault();

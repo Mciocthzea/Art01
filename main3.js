@@ -9,41 +9,38 @@ var beta = 0;
 var gamma = 0;
 var orient =0;
 var movement=0;
-const mov_speed=0.05
+const mov_speed=0.02;
 
 function moveForward (camera, distance ) {
 
     const v = new THREE.Vector3();
-
     v.setFromMatrixColumn( camera.matrix, 0 );
-
-    _vector.crossVectors( camera.up, _vector );
-
-    camera.position.addScaledVector( _vector, distance );
+    v.crossVectors( camera.up, v);
+    camera.position.addScaledVector( v, distance );
 
 };
 
 function moveRight (camera, distance ) {
 
-    _vector.setFromMatrixColumn( camera.matrix, 0 );
-
-    camera.position.addScaledVector( _vector, distance );
+    const v = new THREE.Vector3();
+    v.setFromMatrixColumn( camera.matrix, 0 );
+    camera.position.addScaledVector( v, distance );
 
 };
 
 function animate(){
     requestAnimationFrame(animate);
     if (movement==="up"){
-        camera.position.z+=-mov_speed;
+        moveForward(camera,mov_speed);
     }
     else if(movement==="left") {
-        camera.position.x+=-mov_speed;
+        moveRight(camera,-mov_speed);
     }
     else if(movement==="right") {
-        camera.position.x+=mov_speed;
+        moveRight(camera,mov_speed);
     }
     else if(movement==="down") {
-        camera.position.z+=mov_speed;
+        moveForward(camera,-mov_speed);
     }
     cube_mesh.rotateX(0.1);
     //var eul = new THREE.Euler((gamma)/360*(2*Math.PI),-beta/360*(2*Math.PI),0);
@@ -89,18 +86,30 @@ function onScreenOrientationChange(){
 }
 
 function askPermission() {
+    const log_console = document.getElementById("log-console");
     if (typeof DeviceMotionEvent.requestPermission === "function") {
-        const log_console = document.getElementById("log-console");
+        
         log_console.innerText +=" asking permission...";
         DeviceOrientationEvent.requestPermission().then(response => {
-            log_console.innerText +="response:" + response;
+            //log_console.innerText +="response:" + response;
           if (response == "granted") {
             log_console.innerText +="granted"
             window.addEventListener("deviceorientation", onDeviceOrientationChange,false);
             window.addEventListener("orientationchange", onScreenOrientationChange,false);
             //onScreenOrientationChange();
           }
-        }).catch(console.error);
+          else{
+            log_console.innerText +="refused"
+          }
+        }).catch((error)=>{
+                const log_console = document.getElementById("log-console");
+                log_console.innerText +="ERROR" + error;
+            });
+    }
+    else{
+        log_console.innerText +="without asking permission...";
+        window.addEventListener("deviceorientation", onDeviceOrientationChange,false);
+        window.addEventListener("orientationchange", onScreenOrientationChange,false);  
     }
 };
 
@@ -128,21 +137,9 @@ const model = loader.load(".//assets/van_gogh09c.glb",onModelLoad);
 const amb_light = new THREE.AmbientLight(0xffffff,1);
 scene.add(amb_light);
 
-canvas01.onclick = function(e) {
-    const log_console = document.getElementById("log-console");
-    log_console.innerText +=" clicked1 "
-    //e.preventDefault();
-    //e.stopImmediatePropagation();
-    var recanvas = document.getElementById("canvas01");
-    recanvas.onclick = function() {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        return false;
-    };
-    askPermission();
-};
 
-canvas01.ontouchstart = function(e) {
+//IMPORTANT! must be ontouchend! not ontouchstart
+canvas01.ontouchend = function(e) {
     const log_console = document.getElementById("log-console");
     log_console.innerText +=" clicked2 "
     //e.preventDefault();
@@ -200,7 +197,7 @@ const arrow_down = document.getElementById("arrow-down");
 arrow_down.addEventListener("touchstart",onTouchDown);
 arrow_down.addEventListener("touchend",onTouchEnd);
 
-canvas01.onclick();
+//canvas01.onclick();
 
 animate();
 
